@@ -23,10 +23,10 @@ This makes development a more refined experience without having to switch betwee
 
 ## Appendix A Pin Layouts
 ### Raspberry Pi 4B Pin Layout
-![[Raspberri-Pi-4-Pins.png]]
+![alt text](Raspberri-Pi-4-Pins.png)
 
 ### Arduino Uno 3 Pin Layout
 
-![[Arduino-Pins.png]]
+![alt text](Arduino-Pins.png)
 
 ## Appendix B Components List
