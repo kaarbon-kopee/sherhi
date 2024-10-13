@@ -21,8 +21,8 @@ Development on the Pi is managed using the Remote-SSH plugin.
 
 This makes development a more refined experience without having to switch between IDEs/editors, having a consistent way to interact with git and not having to start separate terminals outside the IDE.
 
-## Web Interface
-![alt text][SheRhi-Web-Interface.png]]## Appendix A Pin Layouts
+Web Interface
+![alt text][SheRhi-Web-Interface.png]
 ### Raspberry Pi 4B Pin Layout
 ![alt text](Raspberri-Pi-4-Pins.png)
 
