@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rotating Text</title>
+    <title>Robot Control</title>
     <style>
         @keyframes rotate {
             0% {
@@ -16,17 +16,99 @@
             }
         }
 
+
+        .rotating-text-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 40vh;
+        }
+
         .rotating-text {
             display: inline-block;
             animation: rotate 5s linear infinite;
-            font-size: 24px;
+            font-size: 40px;
             font-weight: bold;
+        }
+
+        .button-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        .control-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 15px;
+            border: none;
+            color: white;
+            transition: transform 0.1s ease, opacity 0.1s ease;
+        }
+
+        .control-button.forward {
+            background-color: green;
+        }
+
+        .control-button.reverse {
+            background-color: blue;
+        }
+
+        .control-button.stop {
+            background-color: red;
+        }
+
+        .control-button:hover {
+            opacity: 0.8;
+        }
+
+        .control-button:active {
+            transform: scale(0.95);
+            /* Shrinks the button slightly when pressed */
         }
     </style>
 </head>
 
 <body>
-    <div class="rotating-text">Hello, world!</div>
+    <div class="rotating-text-container">
+        <div class="rotating-text">SheRhi</div>
+    </div>
+
+    <div class="button-container">
+        <button onclick="sherhi('forward')" class="control-button forward">
+            Forward
+        </button>
+        <button onclick="sherhi('reverse')" class="control-button reverse">
+            Reverse
+        </button>
+        <button onclick="sherhi('stop')" class="control-button stop">
+            Stop
+        </button>
+    </div>
+
+    <script>
+        function sherhi(command) {
+            fetch('/control', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: command })
+                // Send command as JSON
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Error sending command:', response.statusText);
+                    } else {
+                        console.log('Command sent successfully:', command);
+                    }
+                })
+                .catch(error => {
+                    console.error('Request failed:', error);
+                });
+        }
+    </script>
 </body>
 
 </html>
