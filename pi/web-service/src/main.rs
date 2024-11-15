@@ -27,6 +27,14 @@ async fn control(command: web::Json<Command>) -> impl Responder {
             println!("Reversing SheRhi...");
             control_request('-').await;
         }
+        "left" => {
+            println!("SheRhi moving left...");
+            control_request('l').await;
+        }
+        "right" => {
+            println!("SheRhi moving right...");
+            control_request('r').await;
+        }
         "stop" => {
             println!("Stopping SheRhi...");
             control_request('s').await;
