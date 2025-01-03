@@ -23,6 +23,8 @@ struct SherhiState
 
 SherhiState state_of_sherhi;
 
+char command[2] = {0}; // Buffer for single-character commands
+
 void apply_movement(char movement, int speed)
 {
     switch (movement)
@@ -76,6 +78,56 @@ void setup()
     Serial.println(Ethernet.localIP());
 }
 
+void handle_client(EthernetClient &client)
+{
+    while (client.connected())
+    {
+        while (client.available())
+        {
+            char cmd = client.read();
+
+            if (cmd == '\n')
+            {
+                char movement = command[0];
+
+                Serial.print("Received command: ");
+                Serial.println(movement);
+
+                if (movement == '+' ||
+                    movement == '-' ||
+                    movement == 'l' ||
+                    movement == 'r' ||
+                    movement == 'x')
+                {
+                    state_of_sherhi.movement = movement;
+                }
+                else if (movement == 'f')
+                {
+                    state_of_sherhi.speed = min(
+                        255,
+                        state_of_sherhi.speed + 10);
+                }
+                else if (movement == 's')
+                {
+                    state_of_sherhi.speed = max(
+                        100,
+                        state_of_sherhi.speed - 10);
+                }
+
+                apply_movement(
+                    state_of_sherhi.movement,
+                    state_of_sherhi.speed);
+                command[0] = '\0';
+            }
+            else
+            {
+                command[0] = cmd;
+                command[1] = '\0';
+            }
+        }
+    }
+}
+
 void loop()
 {
     EthernetClient client = server.available();
@@ -83,51 +135,6 @@ void loop()
     if (client)
     {
         Serial.println("New client connected");
-        String command = "";
-
-        while (client.connected())
-        {
-            while (client.available())
-            {
-                char cmd = client.read();
-                if (cmd == '\n')
-                {
-                    Serial.print("Received command: ");
-
-                    char movement = command[0];
-                    Serial.println(command);
-
-                    if (movement == '+' ||
-                        movement == '-' ||
-                        movement == 'l' ||
-                        movement == 'r' ||
-                        movement == 'x')
-                    {
-                        state_of_sherhi.movement = movement;
-                    }
-                    else if (movement == 'f')
-                    {
-                        state_of_sherhi.speed = min(
-                            255,
-                            state_of_sherhi.speed + 10);
-                    }
-                    else if (movement == 's')
-                    {
-                        state_of_sherhi.speed = max(
-                            100,
-                            state_of_sherhi.speed - 10);
-                    }
-
-                    apply_movement(
-                        state_of_sherhi.movement,
-                        state_of_sherhi.speed);
-                    command = "";
-                }
-                else
-                {
-                    command += cmd;
-                }
-            }
-        }
+        handle_client(client);
     }
 }
