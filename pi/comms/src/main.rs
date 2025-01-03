@@ -1,13 +1,13 @@
-use comms::{configure_spi, control_sherhi};
+use comms::{configure_tcp, control_sherhi};
 use std::io::{self, Write};
 
 fn main() -> io::Result<()> {
-    // Configure the SPI interface
-    let mut spi = configure_spi()?;
+    // Configure the TCP interface
+    let mut stream = configure_tcp()?;
 
     loop {
         // Request to start or stop SheRhi
-        print!("Enter request to start or stop SheRhi:");
+        print!("Enter request to start or stop SheRhi: ");
         io::stdout().flush()?;
 
         let mut input = String::new();
@@ -20,13 +20,30 @@ fn main() -> io::Result<()> {
                 println!("Exiting SheRhi control...");
                 break;
             }
-            Some(c) if c == '+' || c == '-' || c == 's' || c == 'S' => c,
+            Some(c)
+                if c == '+'
+                    || c == '-'
+                    || c == 'l'
+                    || c == 'r'
+                    || c == 'f'
+                    || c == 'F'
+                    || c == 's'
+                    || c == 'S'
+                    || c == 'x'
+                    || c == 'X' =>
+            {
+                c
+            }
             _ => {
                 eprintln!(
                     "Invalid input. Please enter:\n\
                     '+' for forward,\n\
                     '-' for reverse,\n\
-                    's' or 'S' to stop SheRhi,\n\
+                    'l' for left,\n\
+                    'r' for right,\n\
+                    'f' or 'F' to speed up,\n\
+                    's' or 'S' to slow down,\n\
+                    'x' or 'X' to stop SheRhi,\n\
                     'q' or 'Q' to quit."
                 );
                 continue;
@@ -34,8 +51,10 @@ fn main() -> io::Result<()> {
         };
 
         // Send request to Arduino and validate response
-        let sensor_value = control_sherhi(&mut spi, request)?;
-        println!("Echo value from Arduino: {:?}", sensor_value);
+        match control_sherhi(&mut stream, request) {
+            Ok(_) => println!("Request sent to Arduino."),
+            Err(e) => eprintln!("Error sending request to Arduino: {:?}", e),
+        }
     }
 
     Ok(())
