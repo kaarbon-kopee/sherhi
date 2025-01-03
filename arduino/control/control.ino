@@ -51,7 +51,7 @@ void apply_movement(char movement, int speed)
         back_left.setSpeed(-speed);
         back_right.setSpeed(speed);
         break;
-    case 's':
+    case 'x':
         front_left.setSpeed(0);
         front_right.setSpeed(0);
         back_left.setSpeed(0);
@@ -83,37 +83,50 @@ void loop()
     if (client)
     {
         Serial.println("New client connected");
+        String command = "";
+
         while (client.connected())
         {
             while (client.available())
             {
                 char cmd = client.read();
-
-                Serial.print("Received command: ");
-                Serial.println(cmd);
-
-                if (cmd == '+' ||
-                    cmd == '-' ||
-                    cmd == 'l' ||
-                    cmd == 'r' ||
-                    cmd == 's')
+                if (cmd == '\n')
                 {
-                    state_of_sherhi.movement = cmd;
-                }
-                else if (cmd == 'u')
-                {
-                    state_of_sherhi.speed = min(
-                        255,
-                        state_of_sherhi.speed + 10);
-                }
-                else if (cmd == 'd')
-                {
-                    state_of_sherhi.speed = max(
-                        100,
-                        state_of_sherhi.speed - 10);
-                }
+                    Serial.print("Received command: ");
 
-                apply_movement(state_of_sherhi.movement, state_of_sherhi.speed);
+                    char movement = command[0];
+                    Serial.println(command);
+
+                    if (movement == '+' ||
+                        movement == '-' ||
+                        movement == 'l' ||
+                        movement == 'r' ||
+                        movement == 'x')
+                    {
+                        state_of_sherhi.movement = movement;
+                    }
+                    else if (movement == 'f')
+                    {
+                        state_of_sherhi.speed = min(
+                            255,
+                            state_of_sherhi.speed + 10);
+                    }
+                    else if (movement == 's')
+                    {
+                        state_of_sherhi.speed = max(
+                            100,
+                            state_of_sherhi.speed - 10);
+                    }
+
+                    apply_movement(
+                        state_of_sherhi.movement,
+                        state_of_sherhi.speed);
+                    command = "";
+                }
+                else
+                {
+                    command += cmd;
+                }
             }
         }
     }
