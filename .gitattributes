@@ -1,6 +1,8 @@
 # Ensure files are classified as specific languages
-*.c linguist-language=C
-*.rs linguist-language=Rust
+*.rs linguist-detectable=true
+*.c linguist-detectable=true
+*.h linguist-detectable=true
+*.py linguist-detectable=true
 
-# Exclude Python utility scripts from stats
-utils/*.py linguist-documentation
+# Exclude utility scripts from stats
+utils/* linguist-vendored
