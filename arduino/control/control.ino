@@ -29,31 +29,43 @@ void apply_movement(char movement, int speed)
 {
     switch (movement)
     {
-    case '+':
+    case '+': // Faster
         front_left.setSpeed(speed);
         front_right.setSpeed(speed);
         back_left.setSpeed(speed);
         back_right.setSpeed(speed);
         break;
-    case '-':
+    case '-': // Slower
         front_left.setSpeed(-speed);
         front_right.setSpeed(-speed);
         back_left.setSpeed(-speed);
         back_right.setSpeed(-speed);
         break;
-    case 'l':
+    case 'l': // Move left
         front_left.setSpeed(-speed);
         front_right.setSpeed(speed);
         back_left.setSpeed(speed);
         back_right.setSpeed(-speed);
         break;
-    case 'r':
+    case 'r': // Move right
         front_left.setSpeed(speed);
         front_right.setSpeed(-speed);
         back_left.setSpeed(-speed);
         back_right.setSpeed(speed);
         break;
-    case 'x':
+    case 'a': // Rotate left (counterclockwise)
+        front_left.setSpeed(-speed);
+        front_right.setSpeed(speed);
+        back_left.setSpeed(-speed);
+        back_right.setSpeed(speed);
+        break;
+    case 'c': // Rotate right (clockwise)
+        front_left.setSpeed(speed);
+        front_right.setSpeed(-speed);
+        back_left.setSpeed(speed);
+        back_right.setSpeed(-speed);
+        break;
+    case 'x': // Full stop
         front_left.setSpeed(0);
         front_right.setSpeed(0);
         back_left.setSpeed(0);
@@ -97,6 +109,8 @@ void handle_client(EthernetClient &client)
                     movement == '-' ||
                     movement == 'l' ||
                     movement == 'r' ||
+                    movement == 'c' ||
+                    movement == 'a' ||
                     movement == 'x')
                 {
                     state_of_sherhi.movement = movement;
