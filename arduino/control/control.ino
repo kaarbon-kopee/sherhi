@@ -27,7 +27,7 @@ char command[2] = {0}; // Buffer for single-character commands
 
 void apply_movement(char movement, int speed)
 {
-    switch (movement)
+    switch (movement) // Mecanum wheel movement commands (rollers at 45 degrees)
     {
     case '+': // Faster
         front_left.setSpeed(speed);
