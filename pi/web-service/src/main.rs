@@ -1,11 +1,12 @@
+mod comms;
+use comms::{configure_tcp, control_sherhi};
+
 use actix_files as fs;
 use actix_web::{middleware::Logger, post, web, App, HttpServer, Responder};
 use env_logger::Env;
 use serde::Deserialize;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
-
-use comms;
 
 #[derive(Deserialize)]
 struct Command {
@@ -14,7 +15,7 @@ struct Command {
 
 async fn control_request(stream: Arc<Mutex<TcpStream>>, request: char) {
     let mut stream = stream.lock().unwrap();
-    if let Err(e) = comms::control_sherhi(&mut stream, request) {
+    if let Err(e) = control_sherhi(&mut stream, request) {
         eprintln!("Error sending request to Arduino: {:?}", e);
     }
 }
@@ -42,6 +43,14 @@ async fn control(
             println!("SheRhi moving right...");
             control_request(stream.get_ref().clone(), 'r').await;
         }
+        "rotate_left" => {
+            println!("SheRhi rotating left...");
+            control_request(stream.get_ref().clone(), 'a').await;
+        }
+        "rotate_right" => {
+            println!("SheRhi rotating right...");
+            control_request(stream.get_ref().clone(), 'c').await;
+        }
         "faster" => {
             println!("SheRhi speeding up...");
             control_request(stream.get_ref().clone(), 'f').await;
@@ -65,7 +74,7 @@ async fn control(
 async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    let stream = comms::configure_tcp().expect("Failed to configure TCP connection");
+    let stream = configure_tcp().expect("Failed to configure TCP connection");
     let shared_stream = Arc::new(Mutex::new(stream));
 
     HttpServer::new(move || {

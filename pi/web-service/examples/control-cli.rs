@@ -1,4 +1,4 @@
-use comms::{configure_tcp, control_sherhi};
+use web_service::comms::{configure_tcp, control_sherhi};
 use std::io::{self, Write};
 
 fn main() -> io::Result<()> {
@@ -25,6 +25,8 @@ fn main() -> io::Result<()> {
                     || c == '-'
                     || c == 'l'
                     || c == 'r'
+                    || c == 'a'
+                    || c == 'c'
                     || c == 'f'
                     || c == 'F'
                     || c == 's'
@@ -41,6 +43,8 @@ fn main() -> io::Result<()> {
                     '-' for reverse,\n\
                     'l' for left,\n\
                     'r' for right,\n\
+                    'a' for rotate left,\n\
+                    'c' for rotate right,\n\
                     'f' or 'F' to speed up,\n\
                     's' or 'S' to slow down,\n\
                     'x' or 'X' to stop SheRhi,\n\

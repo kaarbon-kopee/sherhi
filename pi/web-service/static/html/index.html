@@ -63,6 +63,14 @@
             background-color: orange;
         }
 
+        .control-button.rotate_left {
+            background-color: purple;
+        }
+
+        .control-button.rotate_right {
+            background-color: orange;
+        }
+
         .control-button.faster {
             background-color: red;
         }
@@ -91,6 +99,11 @@
         <div class="rotating-text">SheRhi</div>
     </div>
 
+    <!-- ADD CAMERA STREAM HERE -->
+    <div style="text-align: center;">
+        <img src="http://192.168.1.155:5000/?action=stream" width="1920" height="1080" alt="SheRhi Camera Stream">
+    </div>
+
     <div class="button-container">
         <button onclick="sherhi('forward')" class="control-button forward">
             Forward
@@ -103,6 +116,12 @@
         </button>
         <button onclick="sherhi('right')" class="control-button right">
             Right
+        </button>
+        <button onclick="sherhi('rotate_left')" class="control-button rotate_left">
+            Rotate Left
+        </button>
+        <button onclick="sherhi('rotate_right')" class="control-button rotate_right">
+            Rotate Right
         </button>
         <button onclick="sherhi('faster')" class="control-button faster">
             Faster
