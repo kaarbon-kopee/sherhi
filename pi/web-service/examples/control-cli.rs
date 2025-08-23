@@ -1,8 +1,23 @@
+//! # SheRhi Control Program
+//!
+//! This program connects to the Arduino controller over TCP and
+//! allows the user to send movement commands interactively.
+//!
+//! Supported commands include forward, reverse, left, right,
+//! rotation, speed control, and stop.
 use web_service::comms::{configure_tcp, control_sherhi};
 use std::io::{self, Write};
 
 fn main() -> io::Result<()> {
-    // Configure the TCP interface
+    /// Entry point for the SheRhi control program.
+    //
+    /// This function:
+    /// - Connects to the Arduino via TCP
+    /// - Reads user input commands interactively
+    /// - Sends validated commands to the Arduino
+    ///
+    /// Returns an [`io::Result`] which is `Ok(())` on success or an error
+    /// if the TCP connection or IO fails.
     let mut stream = configure_tcp()?;
 
     loop {
