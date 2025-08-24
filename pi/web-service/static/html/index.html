@@ -91,6 +91,10 @@
             transform: scale(0.95);
             /* Shrinks the button slightly when pressed */
         }
+
+        .control-button.blue {
+            background-color: blue;
+        }
     </style>
 </head>
 
@@ -134,6 +138,18 @@
         </button>
     </div>
 
+    <div class="button-container" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+        <input
+            type="text"
+            id="nameInput"
+            placeholder="Enter a name"
+            style="padding: 10px; font-size: 16px; border-radius: 8px; width: 250px;"
+        />
+        <button onclick="submitName()" class="control-button blue">
+            Say Hello
+        </button>
+    </div>
+
     <script>
         function sherhi(command) {
             fetch('/control', {
@@ -154,6 +170,54 @@
                 .catch(error => {
                     console.error('Request failed:', error);
                 });
+        }
+
+        function sayHello(message) {
+            fetch('/say', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: message })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Error sending speech command:', response.statusText);
+                    } else {
+                        console.log('Speech command sent:', message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Speech request failed:', error);
+                });
+        }
+
+        function submitName() {
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) {
+                alert("Please enter a name");
+                return;
+            }
+
+            const message = `Hello ${name}, I am SheRhi`;
+
+            fetch('/say', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: message })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Error sending speech command:', response.statusText);
+                } else {
+                    console.log('Speech command sent:', message);
+                }
+            })
+            .catch(error => {
+                console.error('Speech request failed:', error);
+            });
         }
     </script>
 </body>
