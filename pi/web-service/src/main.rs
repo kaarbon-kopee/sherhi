@@ -1,4 +1,3 @@
-// Module for TCP communication with Arduino
 mod comms;
 use comms::{configure_tcp, control_sherhi};
 
@@ -6,147 +5,93 @@ use actix_files as fs;
 use actix_web::{middleware::Logger, post, web, App, HttpServer, Responder};
 use env_logger::Env;
 use serde::Deserialize;
-use std::net::TcpStream;
-use std::sync::{Arc, Mutex};
 use std::process::Command;
 
-/// Represents a user command received via HTTP POST (e.g., "forward", "stop").
+/// Incoming HTTP request payload
 #[derive(Deserialize)]
 struct UserCommand {
     action: String,
 }
 
-/// Sends a single-character command to the Arduino over a shared TCP stream.
-///
-/// # Arguments
-/// * `stream` - Shared and mutex-guarded TCP stream.
-/// * `request` - Character command to send to the Arduino.
-async fn control_request(stream: Arc<Mutex<TcpStream>>, request: char) {
-    let mut stream = stream.lock().unwrap();
-    if let Err(e) = control_sherhi(&mut stream, request) {
-        eprintln!("Error sending request to Arduino: {:?}", e);
+/// Open a TCP connection and send a command to the Arduino.
+async fn control_request(request: char) {
+    match configure_tcp() {
+        Ok(mut stream) => {
+            if let Err(e) = control_sherhi(&mut stream, request) {
+                eprintln!("Error sending request to Arduino: {:?}", e);
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to connect to Arduino: {:?}", e);
+        }
     }
 }
 
-/// Handles incoming control requests from the UI and maps them to TCP commands.
-///
-/// Endpoint: POST /control
+/// HTTP POST /control
 #[post("/control")]
-async fn control(
-    command: web::Json<UserCommand>,
-    stream: web::Data<Arc<Mutex<TcpStream>>>,
-) -> impl Responder {
-    let action = &command.action;
-    match action.as_str() {
-        "forward" => {
-            println!("Forwarding SheRhi...");
-            control_request(stream.get_ref().clone(), '+').await;
-        }
-        "reverse" => {
-            println!("Reversing SheRhi...");
-            control_request(stream.get_ref().clone(), '-').await;
-        }
-        "left" => {
-            println!("SheRhi moving left...");
-            control_request(stream.get_ref().clone(), 'l').await;
-        }
-        "right" => {
-            println!("SheRhi moving right...");
-            control_request(stream.get_ref().clone(), 'r').await;
-        }
-        "rotate_left" => {
-            println!("SheRhi rotating left...");
-            control_request(stream.get_ref().clone(), 'a').await;
-        }
-        "rotate_right" => {
-            println!("SheRhi rotating right...");
-            control_request(stream.get_ref().clone(), 'c').await;
-        }
-        "faster" => {
-            println!("SheRhi speeding up...");
-            control_request(stream.get_ref().clone(), 'f').await;
-        }
-        "slower" => {
-            println!("SheRhi slowing down...");
-            control_request(stream.get_ref().clone(), 's').await;
-        }
-        "stop" => {
-            println!("Stopping SheRhi...");
-            control_request(stream.get_ref().clone(), 'x').await;
-        }
-        _ => {
-            eprintln!("Invalid action: {}", action);
-        }
+async fn control(command: web::Json<UserCommand>) -> impl Responder {
+    let action = command.action.as_str();
+
+    match action {
+        "forward" => control_request('+').await,
+        "reverse" => control_request('-').await,
+        "left" => control_request('l').await,
+        "right" => control_request('r').await,
+        "rotate_left" => control_request('a').await,
+        "rotate_right" => control_request('c').await,
+        "faster" => control_request('f').await,
+        "slower" => control_request('s').await,
+        "stop" => control_request('x').await,
+        _ => eprintln!("Invalid action: {}", action),
     }
+
     "OK"
 }
 
-
-/// Synthesizes and plays a spoken message using `pico2wave` and `paplay`.
-///
-/// Endpoint: POST /say
 #[post("/say")]
 async fn say(message: web::Json<UserCommand>) -> impl Responder {
     let text = &message.action;
 
-    // Construct shell command to generate and play audio
-    let cmd = format!(
-        "pico2wave -w /tmp/hello.wav '{}' && paplay /tmp/hello.wav",
-        text
-    );
-
-    // Execute the shell command
-    let result = Command::new("bash")
-        .arg("-c")
-        .arg(cmd)
+    // Volume: 0–200 (100 = default, 150 = louder)
+    let result = Command::new("espeak")
+        .args(["-ven+f3", "-a200", text])
         .output();
 
-    // Handle success or error output
     match result {
-        Ok(result) if result.status.success() => {
-            println!("Spoken: {}", text);
-        }
-        Ok(output) => {
+        Ok(out) if out.status.success() => println!("Spoken: {}", text),
+        Ok(out) => {
             eprintln!(
-                "Error speaking text:\nstderr: {}\nstdout: {}",
-                String::from_utf8_lossy(&output.stderr),
-                String::from_utf8_lossy(&output.stdout)
+                "Speech error:\nstderr: {}\nstdout: {}",
+                String::from_utf8_lossy(&out.stderr),
+                String::from_utf8_lossy(&out.stdout)
             );
         }
-        Err(e) => {
-            eprintln!("Failed to execute command: {}", e);
-        }
+        Err(e) => eprintln!("Failed to execute TTS: {}", e),
     }
+
     "OK"
 }
 
-/// Main entry point to the Actix-Web service.
-/// - Initializes logging
-/// - Sets audio volume
-/// - Connects to Arduino
-/// - Starts HTTP server
+/// Entry point
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Initialize logger from environment variable (e.g., RUST_LOG)
+    // Logging
     env_logger::init_from_env(Env::default().default_filter_or("info"));
 
-    // Set speaker volume at startup (sink 80 to 100%)
-    let _ = std::process::Command::new("pactl")
+    // Set audio volume (safe if it fails)
+    let _ = Command::new("pactl")
         .args(["set-sink-volume", "80", "100%"])
         .output();
 
-    // Establish TCP connection with the Arduino
-    let stream = configure_tcp().expect("Failed to configure TCP connection");
-    let shared_stream = Arc::new(Mutex::new(stream));
+    println!("Starting SheRhi web server on port 8080...");
 
-    // Start HTTP server with shared state and registered routes
-    HttpServer::new(move || {
+    // Web server
+    HttpServer::new(|| {
         App::new()
             .wrap(Logger::default())
-            .app_data(web::Data::new(shared_stream.clone()))
             .service(control)
             .service(say)
-            .service(fs::Files::new("/", "./static/html").index_file("index.html"))
+            .service(fs::Files::new("/", "/opt/sherhi/html").index_file("index.html"))
     })
     .bind("0.0.0.0:8080")?
     .run()

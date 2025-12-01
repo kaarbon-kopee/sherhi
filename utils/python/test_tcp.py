@@ -24,7 +24,7 @@ def main():
                 break
       
             print(f"Sending command: {cmd}")
-            client_socket.sendall(cmd.encode('utf-8'))
+            client_socket.sendall((cmd + '\n').encode('utf-8'))
         
         # Wait for response from the Arduino
         #response = client_socket.recv(1024)
